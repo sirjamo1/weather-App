@@ -31,36 +31,38 @@ const renderForm = () => {
     return formContainer;
 };
 // https://api.openweathermap.org/data/2.5/weather?q=brisbane&appid=9f22446b3c7684227930790425851744
-const renderWeatherCard = (
-    locationData,
-    tempData,
-    minTempData,
-    maxTempData,
-    feelsLikeData
-) => {
+
+// const sunrise = weatherDataResponse.sys.sunrise;
+// const sunset = weatherDataResponse.sys.sunset;
+// const windSpeed = weatherDataResponse.wind.speed;
+// const winDirection = weatherDataResponse.wind.deg;
+
+
+const renderWeatherCard = (data) => {
     const mainContainer = document.getElementById("main-container");
     const weatherCard = document.createElement("div");
     weatherCard.id = "weather-card";
     const location = document.createElement("h3");
-    location.innerHTML =
-        locationData[0].toUpperCase() + locationData.slice(1).toLowerCase();
+    location.innerHTML = `${data.name}, ${data.sys.country}`;
     weatherCard.appendChild(location);
     const tempContainer = document.createElement("div");
     tempContainer.id = "temp-container";
     const temp = document.createElement("p");
-    temp.innerHTML = `Temp : ${tempData}`;
+    temp.innerHTML = `Temp : ${kelvinToCelsius(data.main.temp)}`;
     temp.id = "temp";
     tempContainer.appendChild(temp);
     const minTemp = document.createElement("p");
-    minTemp.innerHTML = `Min-temp : ${minTempData}`;
+    minTemp.innerHTML = `Min-temp : ${kelvinToCelsius(data.main.temp_min)}`;
     minTemp.id = "min-temp";
     tempContainer.appendChild(minTemp);
     const maxTemp = document.createElement("p");
-    maxTemp.innerHTML = `Max-temp : ${maxTempData}`;
+    maxTemp.innerHTML = `Max-temp : ${kelvinToCelsius(data.main.temp_max)}`;
     maxTemp.id = "max-temp";
     tempContainer.appendChild(maxTemp);
     const feelsLike = document.createElement("p");
-    feelsLike.innerHTML = `Feels like : ${feelsLikeData}`;
+    feelsLike.innerHTML = `Feels like : ${kelvinToCelsius(
+        data.main.feels_like
+    )}`;
     feelsLike.id = "feels-like";
     tempContainer.appendChild(feelsLike);
     weatherCard.appendChild(tempContainer);
@@ -82,16 +84,28 @@ const getData = async () => {
             { mode: "cors" }
         );
         const weatherData = await response.json();
-        const tempC = kelvinToCelsius(weatherData.main.temp);
-        const minTempC = kelvinToCelsius(weatherData.main.temp_min);
-        const maxTempC = kelvinToCelsius(weatherData.main.temp_max);
-        const feelsLikeTempC = kelvinToCelsius(weatherData.main.feels_like);
-
-        renderWeatherCard(location, tempC, minTempC, maxTempC, feelsLikeTempC);
+        renderWeatherCard(weatherData);
     } catch (err) {
         console.log(err);
     }
 };
+
+// sys:
+//  country: "AU";
+//  id: 2005393;
+//  sunrise: 1669920296;
+//  sunset: 1669969777;
+
+// weather: (weather[0])
+//  Array(1)
+//  0: {id: 803, main: 'Clouds', description: 'broken clouds', icon: '04d'}
+//  length: 1
+//  [[Prototype]]: Array(0)
+
+// wind:
+//  deg: 170;
+//  speed: 6.17;
+
 const kelvinToCelsius = (k) => {
     let c = Math.round(k - 273.15) + " c";
     return c;
@@ -111,3 +125,19 @@ const fahrenheitToCelsius = (f) => {
 
 document.querySelector("body").appendChild(renderApp());
 //{temp: 295.86, feels_like: 295.65, temp_min: 295.86, temp_max: 295.86, pressure: 1010, …}
+
+// sys:
+//  country: "AU";
+//  id: 2005393;
+//  sunrise: 1669920296;
+//  sunset: 1669969777;
+
+// weather: (weather[0])
+//  Array(1)
+//  0: {id: 803, main: 'Clouds', description: 'broken clouds', icon: '04d'}
+//  length: 1
+//  [[Prototype]]: Array(0)
+
+// wind:
+//  deg: 170;
+//  speed: 6.17;

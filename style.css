@@ -3,20 +3,79 @@
  padding: 0;
 }
 body {
- align-items: center;
- justify-content: center;
  text-align: center;
  height: 100vh;
 }
 
 #main-container {
-color: red;
 height: 100%;
 background-repeat: no-repeat, repeat;
  background-size: cover; 
- 
+align-items: center;
+display: grid;
+flex-direction: column;
+justify-content: center;
+
 }
 
 #form-container {
  display: grid;
+ align-items: center;
+ justify-items: center;
+ height: 20%;
+}
+
+#location {
+ width: 70%;
+ height: 30px;
+ font-size: 1.4rem;
+text-align: center;
+ border-radius: 6px;
+ margin-bottom: 10px;
+}
+#form-container button {
+ width: 40%;
+ height: 30px;
+ border-radius: 6px;
+}
+
+/* Weather card */
+
+#weather-card {
+ background-color: rgba(255, 255, 255, 0.3);
+ border-radius: 6px;
+ height: 80%;
+ display: grid;
+ margin-bottom: 100px;
+}
+#weather-card p {
+ 
+}
+#temp-container {
+ display: flex;
+ justify-content: center;
+}
+#temp-inner-container-l {
+ text-align: end;
+ width: 50%;
+}
+
+#temp-inner-container-r {
+ width: 50%;
+ text-align: left;
+ padding-left: 4px;
+}
+
+#sun-container {
+ background-repeat: no-repeat, repeat;
+ background-size:contain;
+ display: flex; 
+ justify-content: space-between;
+
+}
+#sun-container * {
+ margin-top: 60px;
+ font-size: 0.8rem;
+ margin-left: 4px;
+ margin-right: 4px;
 }

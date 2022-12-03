@@ -29,7 +29,13 @@ const renderForm = () => {
 
     return formContainer;
 };
+const getLocalDateTime = (data) => {
+    const utcSeconds = parseInt(data.dt, 10) + parseInt(data.timezone, 10);
+    const utcMilliseconds = utcSeconds * 1000;
+    let fullDate = new Date(utcMilliseconds).toUTCString();
 
+    return fullDate;
+};
 const changeBackground = (
     data,
     sunriseTime,
@@ -63,6 +69,7 @@ const changeBackground = (
 };
 
 const renderWeatherCard = (data) => {
+
     const sunriseTime = new Date(data.sys.sunrise * 1000)
         .toTimeString()
         .substring(0, 8);
@@ -71,18 +78,29 @@ const renderWeatherCard = (data) => {
         .substring(0, 8);
 
     const mainContainer = document.getElementById("main-container");
-
     const weatherCard = document.createElement("div");
+     // weatherCard.style.backgroundImage =
+     //     `url('assets/images/backgrounds/cardWeather/${data.weather[0].description}.jpg')`;
     changeBackground(data, sunriseTime, sunsetTime, mainContainer, weatherCard);
     weatherCard.id = "weather-card";
     const location = document.createElement("h3");
+
     location.innerHTML = `${data.name}, ${data.sys.country}`;
     weatherCard.appendChild(location);
+    const locationDateTime = document.createElement("p");
+    locationDateTime.innerHTML = getLocalDateTime(data);
+    weatherCard.appendChild(locationDateTime)
+    for (let i = 0; i < data.weather.length; i += 1) {
+        const icon = document.createElement("img");
+        icon.src = `http://openweathermap.org/img/wn/${data.weather[i].icon}@2x.png`;
+        weatherCard.appendChild(icon)
+    }
+    
 
     //TEMP container
     const tempContainer = document.createElement("div");
     const tempInnerContainerL = document.createElement("div");
-    tempInnerContainerL.id = 'temp-inner-container-l'
+    tempInnerContainerL.id = "temp-inner-container-l";
     tempContainer.appendChild(tempInnerContainerL);
     tempContainer.id = "temp-container";
     const temp = document.createElement("p");
@@ -101,15 +119,12 @@ const renderWeatherCard = (data) => {
     feelsLike.innerHTML = `Feels like :`;
     feelsLike.id = "feels-like";
     tempInnerContainerL.appendChild(feelsLike);
-
     const tempInnerContainerR = document.createElement("div");
     tempInnerContainerR.id = "temp-inner-container-r";
     tempContainer.appendChild(tempInnerContainerR);
-
     const tempValue = document.createElement("p");
     tempValue.innerHTML = kelvinToCelsius(data.main.temp);
     tempInnerContainerR.appendChild(tempValue);
-
     const minTempValue = document.createElement("p");
     minTempValue.innerHTML = kelvinToCelsius(data.main.temp_min);
     minTempValue.id = "min-temp-value";
@@ -122,7 +137,6 @@ const renderWeatherCard = (data) => {
     feelsLikeValue.innerHTML = kelvinToCelsius(data.main.feels_like);
     feelsLikeValue.id = "feels-like-value";
     tempInnerContainerR.appendChild(feelsLikeValue);
-
     weatherCard.appendChild(tempContainer);
 
     //Sun Container

@@ -54,6 +54,12 @@ text-align: center;
  padding-top: 10px;
  font-size: 1.6rem;
 }
+/*👉
+NOT SURE about this if there is more then one icon👈*/
+.weather-icons {
+ margin-left: 30%;
+ 
+}
 #weather-card p {
  
 }

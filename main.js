@@ -1,3 +1,5 @@
+
+
 const renderApp = () => {
     const mainContainer = document.createElement("div");
     mainContainer.id = "main-container";
@@ -93,6 +95,7 @@ const renderWeatherCard = (data) => {
     for (let i = 0; i < data.weather.length; i += 1) {
         const icon = document.createElement("img");
         icon.src = `http://openweathermap.org/img/wn/${data.weather[i].icon}@2x.png`;
+         icon.classList = 'weather-icons'
         weatherCard.appendChild(icon)
     }
     

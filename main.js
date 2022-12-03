@@ -1,5 +1,3 @@
-
-
 const renderApp = () => {
     const mainContainer = document.createElement("div");
     mainContainer.id = "main-container";
@@ -69,9 +67,31 @@ const changeBackground = (
         weatherCard.style.color = "white";
     }
 };
-
+const compassLabels = [
+    "N",
+    "NNE",
+    "NE",
+    "ENE",
+    "E",
+    "ESE",
+    "SE",
+    "SSE",
+    "S",
+    "SSW",
+    "SW",
+    "WSW",
+    "W",
+    "WNW",
+    "NW",
+    "NNW",
+    "N",
+];
+const windDir = (deg) => {
+    let index = Math.round(deg / 22.5);
+    let compassReading = compassLabels[index];
+    return compassReading;
+};
 const renderWeatherCard = (data) => {
-
     const sunriseTime = new Date(data.sys.sunrise * 1000)
         .toTimeString()
         .substring(0, 8);
@@ -81,8 +101,8 @@ const renderWeatherCard = (data) => {
 
     const mainContainer = document.getElementById("main-container");
     const weatherCard = document.createElement("div");
-     // weatherCard.style.backgroundImage =
-     //     `url('assets/images/backgrounds/cardWeather/${data.weather[0].description}.jpg')`;
+    // weatherCard.style.backgroundImage =
+    //     `url('assets/images/backgrounds/cardWeather/${data.weather[0].description}.jpg')`;
     changeBackground(data, sunriseTime, sunsetTime, mainContainer, weatherCard);
     weatherCard.id = "weather-card";
     const location = document.createElement("h3");
@@ -91,17 +111,18 @@ const renderWeatherCard = (data) => {
     weatherCard.appendChild(location);
     const locationDateTime = document.createElement("p");
     locationDateTime.innerHTML = getLocalDateTime(data);
-    weatherCard.appendChild(locationDateTime)
+    weatherCard.appendChild(locationDateTime);
     for (let i = 0; i < data.weather.length; i += 1) {
         const icon = document.createElement("img");
         icon.src = `http://openweathermap.org/img/wn/${data.weather[i].icon}@2x.png`;
-         icon.classList = 'weather-icons'
-        weatherCard.appendChild(icon)
+        icon.classList = "weather-icons";
+        weatherCard.appendChild(icon);
     }
-    
 
     //TEMP container
+    
     const tempContainer = document.createElement("div");
+    //L
     const tempInnerContainerL = document.createElement("div");
     tempInnerContainerL.id = "temp-inner-container-l";
     tempContainer.appendChild(tempInnerContainerL);
@@ -122,6 +143,13 @@ const renderWeatherCard = (data) => {
     feelsLike.innerHTML = `Feels like :`;
     feelsLike.id = "feels-like";
     tempInnerContainerL.appendChild(feelsLike);
+    const humidity = document.createElement("p");
+    humidity.innerHTML = 'Humidity :';
+    tempInnerContainerL.appendChild(humidity);
+    const pressure = document.createElement("p");
+    pressure.innerHTML = 'Pressure :';
+    tempInnerContainerL.appendChild(pressure);
+    //R
     const tempInnerContainerR = document.createElement("div");
     tempInnerContainerR.id = "temp-inner-container-r";
     tempContainer.appendChild(tempInnerContainerR);
@@ -140,6 +168,12 @@ const renderWeatherCard = (data) => {
     feelsLikeValue.innerHTML = kelvinToCelsius(data.main.feels_like);
     feelsLikeValue.id = "feels-like-value";
     tempInnerContainerR.appendChild(feelsLikeValue);
+    const humidityValue = document.createElement("p");
+    humidityValue.innerHTML = data.main.humidity;
+    tempInnerContainerR.appendChild(humidityValue);
+    const pressureValue = document.createElement("p");
+    pressureValue.innerHTML = data.main.pressure;
+    tempInnerContainerR.appendChild(pressureValue);
     weatherCard.appendChild(tempContainer);
 
     //Sun Container
@@ -155,15 +189,41 @@ const renderWeatherCard = (data) => {
     sunset.innerHTML = `${sunsetTime} pm`;
     sunContainer.appendChild(sunset);
     weatherCard.appendChild(sunContainer);
+
+    //wind container
     const windContainer = document.createElement("div");
+    //L
+    const windInnerContainerL = document.createElement("div");
+    windInnerContainerL.id = "wind-inner-container-l";
+    windContainer.appendChild(windInnerContainerL);
     windContainer.id = "wind-container";
+    const wind = document.createElement("p");
+    wind.innerHTML = `Wind`;
+    windInnerContainerL.appendChild(wind);
     const windSpeed = document.createElement("p");
-    windSpeed.innerHTML = `Wind speed : ${data.wind.speed}`;
-    windContainer.appendChild(windSpeed);
+    windSpeed.innerHTML = `${data.wind.speed} m/s`;
+    windInnerContainerL.appendChild(windSpeed);
     const windDirection = document.createElement("p");
-    windDirection.innerHTML = `Wind direction : ${data.wind.deg}`;
-    windContainer.appendChild(windDirection);
+    windDirection.id = "wind-direction";
+    windDirection.innerHTML = windDir(data.wind.deg);
+    windInnerContainerL.appendChild(windDirection);
+    //R
+    const windInnerContainerR = document.createElement("div");
+    windInnerContainerR.id = "wind-inner-container-r";
+    windContainer.appendChild(windInnerContainerR);
+    const compass = document.createElement("img");
+    compass.src = "assets/icons/compass.png";
+    compass.id = "compass";
+    const arrowRed = document.createElement("img");
+    arrowRed.src = "assets/icons/redArrow.png";
+    arrowRed.id = "arrow-red";
+    arrowRed.style.transform = `rotate(${data.wind.deg}deg)`;
+
+    windInnerContainerR.appendChild(compass);
+    windInnerContainerR.appendChild(arrowRed);
+
     weatherCard.appendChild(windContainer);
+
     if (document.getElementById("weather-card")) {
         mainContainer.replaceChild(
             weatherCard,

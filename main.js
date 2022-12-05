@@ -64,10 +64,9 @@ const renderForm = () => {
 const getLocalDateTime = (timezone) => {
     let d = new Date();
     let utc = d.getTime() + d.getTimezoneOffset() * 60000;
-    let nd = new Date(utc + 3600000 * timezone);
+    let localFullDateTime = new Date(utc + 3600000 * timezone);
 
-    //    return nd.toLocaleString()
-    return nd.toLocaleString();
+    return localFullDateTime;
 };
 const getSunRiseSunSet = (timezone, dataTime) => {
     let date = new Date(dataTime * 1000);
@@ -86,7 +85,6 @@ const changeBackground = (
     weatherCard
 ) => {
     let localHour = Number(localDateTime.substring(12, 14));
-    console.log(localHour);
     let sunriseHour = Number(sunriseTime.substring(0, 2));
     let sunsetHour = Number(sunsetTime.substring(0, 2));
     if (localHour === sunriseHour || localHour === sunriseHour - 1) {
@@ -122,11 +120,38 @@ const compassLabels = [
     "NNW",
     "N",
 ];
+const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const fiveDayForecast = (data, weekday) => {
+    const forecastContainer = document.createElement("div");
+    forecastContainer.id = "forecast-container";
+    let daysOfWeekIndex = daysOfWeek.indexOf(weekday);
 
+    for (let i = 1; i < 6; i += 1) {
+        daysOfWeekIndex =
+            daysOfWeekIndex === 6
+                ? (daysOfWeekIndex = 0)
+                : (daysOfWeekIndex += 1);
+        const dayContainer = document.createElement("div");
+        dayContainer.className = 'day-container'
+        const day = document.createElement("p");
+        day.innerHTML = `${daysOfWeek[daysOfWeekIndex]}`;
+        dayContainer.appendChild(day);
+        const minTemp = document.createElement("p");
+        minTemp.innerHTML = `Min: ${kelvinToCelsius(
+            data.list[i].main.temp_min
+        )}`;
+        dayContainer.appendChild(minTemp);
+        const maxTemp = document.createElement("p");
+        maxTemp.innerHTML = `Max:${kelvinToCelsius(
+            data.list[i].main.temp_max
+        )}`;
+        dayContainer.appendChild(maxTemp);
 
-const fiveDayForcast = () => {
-    
-}
+        forecastContainer.appendChild(dayContainer);
+    }
+
+    return forecastContainer;
+};
 const windDir = (deg) => {
     let index = Math.round(deg / 22.5);
     let compassReading = compassLabels[index];
@@ -134,10 +159,11 @@ const windDir = (deg) => {
 };
 const renderWeatherCard = (data) => {
     const timezone = data.city.timezone / 60 / 60;
-    const localDateTime = getLocalDateTime(timezone);
+    const localFullDateTime = getLocalDateTime(timezone);
+    const weekday = localFullDateTime.toString().substring(0, 3);
+    const localDateTime = localFullDateTime.toLocaleString();
     const sunriseTime = getSunRiseSunSet(data.city.timezone, data.city.sunrise);
     const sunsetTime = getSunRiseSunSet(data.city.timezone, data.city.sunset);
-
     const mainContainer = document.getElementById("main-container");
     const weatherCard = document.createElement("div");
     // weatherCard.style.backgroundImage =
@@ -220,7 +246,8 @@ const renderWeatherCard = (data) => {
     pressureValue.innerHTML = data.list[0].main.pressure;
     tempInnerContainerR.appendChild(pressureValue);
     weatherCard.appendChild(tempContainer);
-
+    //5 day forecast
+    weatherCard.appendChild(fiveDayForecast(data, weekday));
     //Sun Container
     const sunContainer = document.createElement("div");
     sunContainer.style.backgroundImage =

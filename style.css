@@ -111,3 +111,13 @@ body {
     padding: 10px;
     /*👉align-self: center;👈*/
 }
+/* 5 day forecast */
+#forecast-container {
+    display: flex;
+    justify-content: space-evenly;
+}
+.day-container {
+    background-color: aqua;
+   border-radius: 6px;
+    font-size: 0.7rem;
+}

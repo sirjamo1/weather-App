@@ -1,13 +1,42 @@
+import data from "./assets/city.list.json" assert { type: "json" };
+
+const cityData = data;
 const renderApp = () => {
     const mainContainer = document.createElement("div");
     mainContainer.id = "main-container";
     mainContainer.style.backgroundImage =
         "url('assets/images/backgrounds/midday.jpg')";
     mainContainer.appendChild(renderForm());
+    console.log(cityData);
 
+    console.log("done");
     return mainContainer;
 };
+const confirmCity = (city) => {
+    console.log(city);
+    let cityFormatted = "";
+    const splitString = city.split(" ");
+    for (let i = 0; i < splitString.length; i += 1) {
+        let lowerCase =
+            i !== splitString.length - 1
+                ? splitString[i][0].toUpperCase() +
+                  splitString[i].slice(1) +
+                  " "
+                : splitString[i][0].toUpperCase() + splitString[i].slice(1);
+        cityFormatted += lowerCase;
+    }
+    console.log({ cityFormatted });
 
+    for (let i = 0; i < cityData.length; i += 1) {
+        if (cityData[i].name == cityFormatted) {
+            let cityId = cityData[i].id;
+            console.log(cityId);
+            return cityId;
+        }
+    }
+    console.log(`${city} city not found`);
+};
+// need to use id to search for for 5 day weather
 const renderForm = () => {
     const formContainer = document.createElement("form");
     formContainer.id = "form-container";
@@ -21,7 +50,9 @@ const renderForm = () => {
     searchButton.type = "search";
     searchButton.innerHTML = "Search";
     searchButton.addEventListener("click", (e) => {
-        getData();
+        let id = confirmCity(locationInput.value);
+
+        getData(id);
         e.preventDefault();
     });
 
@@ -29,42 +60,47 @@ const renderForm = () => {
 
     return formContainer;
 };
-const getLocalDateTime = (data) => {
-    const utcSeconds = parseInt(data.dt, 10) + parseInt(data.timezone, 10);
-    const utcMilliseconds = utcSeconds * 1000;
-    let fullDate = new Date(utcMilliseconds).toUTCString();
 
-    return fullDate;
+const getLocalDateTime = (timezone) => {
+    let d = new Date();
+    let utc = d.getTime() + d.getTimezoneOffset() * 60000;
+    let nd = new Date(utc + 3600000 * timezone);
+
+    //    return nd.toLocaleString()
+    return nd.toLocaleString();
 };
+const getSunRiseSunSet = (timezone, dataTime) => {
+    let date = new Date(dataTime * 1000);
+    let time = date.getTime();
+    let localOffset = date.getTimezoneOffset() * 60000;
+    let utc = time + localOffset;
+    let localTime = utc + 1000 * timezone;
+    return new Date(localTime).toTimeString().substring(0, 8);
+};
+
 const changeBackground = (
-    data,
+    localDateTime,
     sunriseTime,
     sunsetTime,
     mainContainer,
     weatherCard
 ) => {
-    const utcSeconds = parseInt(data.dt, 10) + parseInt(data.timezone, 10);
-    const utcMilliseconds = utcSeconds * 1000;
-    const localHour = new Date(utcMilliseconds).getUTCHours();
+    let localHour = Number(localDateTime.substring(12, 14));
+    console.log(localHour);
     let sunriseHour = Number(sunriseTime.substring(0, 2));
     let sunsetHour = Number(sunsetTime.substring(0, 2));
-    console.log(weatherCard);
     if (localHour === sunriseHour || localHour === sunriseHour - 1) {
         mainContainer.style.backgroundImage =
             "url('assets/images/backgrounds/sunrise.jpg')";
-        weatherCard.style.color = "black";
     } else if (localHour === sunsetHour || localHour === sunsetHour + 1) {
         mainContainer.style.backgroundImage =
             "url('assets/images/backgrounds/sunset.jpg')";
-        weatherCard.style.color = "black";
     } else if (localHour > sunriseHour + 1 && localHour < sunsetHour - 1) {
         mainContainer.style.backgroundImage =
             "url('assets/images/backgrounds/midday.jpg')";
-        weatherCard.style.color = "black";
     } else {
         mainContainer.style.backgroundImage =
             "url('assets/images/backgrounds/night.jpg')";
-        weatherCard.style.color = "white";
     }
 };
 const compassLabels = [
@@ -86,41 +122,50 @@ const compassLabels = [
     "NNW",
     "N",
 ];
+
+
+const fiveDayForcast = () => {
+    
+}
 const windDir = (deg) => {
     let index = Math.round(deg / 22.5);
     let compassReading = compassLabels[index];
     return compassReading;
 };
 const renderWeatherCard = (data) => {
-    const sunriseTime = new Date(data.sys.sunrise * 1000)
-        .toTimeString()
-        .substring(0, 8);
-    const sunsetTime = new Date(data.sys.sunset * 1000)
-        .toTimeString()
-        .substring(0, 8);
+    const timezone = data.city.timezone / 60 / 60;
+    const localDateTime = getLocalDateTime(timezone);
+    const sunriseTime = getSunRiseSunSet(data.city.timezone, data.city.sunrise);
+    const sunsetTime = getSunRiseSunSet(data.city.timezone, data.city.sunset);
 
     const mainContainer = document.getElementById("main-container");
     const weatherCard = document.createElement("div");
     // weatherCard.style.backgroundImage =
     //     `url('assets/images/backgrounds/cardWeather/${data.weather[0].description}.jpg')`;
-    changeBackground(data, sunriseTime, sunsetTime, mainContainer, weatherCard);
+    changeBackground(
+        localDateTime,
+        sunriseTime,
+        sunsetTime,
+        mainContainer,
+        weatherCard
+    );
     weatherCard.id = "weather-card";
     const location = document.createElement("h3");
 
-    location.innerHTML = `${data.name}, ${data.sys.country}`;
+    location.innerHTML = `${data.city.name}, ${data.city.country}`;
     weatherCard.appendChild(location);
     const locationDateTime = document.createElement("p");
-    locationDateTime.innerHTML = getLocalDateTime(data);
+    locationDateTime.innerHTML = localDateTime;
     weatherCard.appendChild(locationDateTime);
-    for (let i = 0; i < data.weather.length; i += 1) {
+    for (let i = 0; i < data.list[0].weather.length; i += 1) {
         const icon = document.createElement("img");
-        icon.src = `http://openweathermap.org/img/wn/${data.weather[i].icon}@2x.png`;
+        icon.src = `http://openweathermap.org/img/wn/${data.list[0].weather[i].icon}@2x.png`;
         icon.classList = "weather-icons";
         weatherCard.appendChild(icon);
     }
 
     //TEMP container
-    
+
     const tempContainer = document.createElement("div");
     //L
     const tempInnerContainerL = document.createElement("div");
@@ -144,35 +189,35 @@ const renderWeatherCard = (data) => {
     feelsLike.id = "feels-like";
     tempInnerContainerL.appendChild(feelsLike);
     const humidity = document.createElement("p");
-    humidity.innerHTML = 'Humidity :';
+    humidity.innerHTML = "Humidity :";
     tempInnerContainerL.appendChild(humidity);
     const pressure = document.createElement("p");
-    pressure.innerHTML = 'Pressure :';
+    pressure.innerHTML = "Pressure :";
     tempInnerContainerL.appendChild(pressure);
     //R
     const tempInnerContainerR = document.createElement("div");
     tempInnerContainerR.id = "temp-inner-container-r";
     tempContainer.appendChild(tempInnerContainerR);
     const tempValue = document.createElement("p");
-    tempValue.innerHTML = kelvinToCelsius(data.main.temp);
+    tempValue.innerHTML = kelvinToCelsius(data.list[0].main.temp);
     tempInnerContainerR.appendChild(tempValue);
     const minTempValue = document.createElement("p");
-    minTempValue.innerHTML = kelvinToCelsius(data.main.temp_min);
+    minTempValue.innerHTML = kelvinToCelsius(data.list[0].main.temp_min);
     minTempValue.id = "min-temp-value";
     tempInnerContainerR.appendChild(minTempValue);
     const maxTempValue = document.createElement("p");
-    maxTempValue.innerHTML = kelvinToCelsius(data.main.temp_max);
+    maxTempValue.innerHTML = kelvinToCelsius(data.list[0].main.temp_max);
     maxTempValue.id = "max-temp-value";
     tempInnerContainerR.appendChild(maxTempValue);
     const feelsLikeValue = document.createElement("p");
-    feelsLikeValue.innerHTML = kelvinToCelsius(data.main.feels_like);
+    feelsLikeValue.innerHTML = kelvinToCelsius(data.list[0].main.feels_like);
     feelsLikeValue.id = "feels-like-value";
     tempInnerContainerR.appendChild(feelsLikeValue);
     const humidityValue = document.createElement("p");
-    humidityValue.innerHTML = data.main.humidity;
+    humidityValue.innerHTML = data.list[0].main.humidity;
     tempInnerContainerR.appendChild(humidityValue);
     const pressureValue = document.createElement("p");
-    pressureValue.innerHTML = data.main.pressure;
+    pressureValue.innerHTML = data.list[0].main.pressure;
     tempInnerContainerR.appendChild(pressureValue);
     weatherCard.appendChild(tempContainer);
 
@@ -201,11 +246,11 @@ const renderWeatherCard = (data) => {
     wind.innerHTML = `Wind`;
     windInnerContainerL.appendChild(wind);
     const windSpeed = document.createElement("p");
-    windSpeed.innerHTML = `${data.wind.speed} m/s`;
+    windSpeed.innerHTML = `${data.list[0].wind.speed} m/s`;
     windInnerContainerL.appendChild(windSpeed);
     const windDirection = document.createElement("p");
     windDirection.id = "wind-direction";
-    windDirection.innerHTML = windDir(data.wind.deg);
+    windDirection.innerHTML = windDir(data.list[0].wind.deg);
     windInnerContainerL.appendChild(windDirection);
     //R
     const windInnerContainerR = document.createElement("div");
@@ -217,7 +262,7 @@ const renderWeatherCard = (data) => {
     const arrowRed = document.createElement("img");
     arrowRed.src = "assets/icons/redArrow.png";
     arrowRed.id = "arrow-red";
-    arrowRed.style.transform = `rotate(${data.wind.deg}deg)`;
+    arrowRed.style.transform = `rotate(${data.list[0].wind.deg}deg)`;
 
     windInnerContainerR.appendChild(compass);
     windInnerContainerR.appendChild(arrowRed);
@@ -233,23 +278,44 @@ const renderWeatherCard = (data) => {
         mainContainer.appendChild(weatherCard);
     }
 };
-const getData = async () => {
-    let location = document.getElementById("location").value;
+const getData = async (id) => {
     try {
         const response = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=9f22446b3c7684227930790425851744`,
+            `http://api.openweathermap.org/data/2.5/forecast?id=${id}&appid=9f22446b3c7684227930790425851744`,
             { mode: "cors" }
         );
         const weatherData = await response.json();
-        const lat = weatherData.coord.lat;
-        const lon = weatherData.coord.lon;
         console.log(weatherData);
         renderWeatherCard(weatherData);
     } catch (err) {
         console.log(err);
     }
-};
 
+    // try {
+    //     const response1 = await fetch(
+    //         `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=9f22446b3c7684227930790425851744`,
+    //         { mode: "cors" }
+    //     );
+    //     const weatherData = await response1.json();
+    //     const lat = weatherData.coord.lat;
+    //     const lon = weatherData.coord.lon;
+    //     console.log(weatherData);
+    //     renderWeatherCard(weatherData);
+    //     try {
+    //         const response2 = await fetch(
+    //             `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=9f22446b3c7684227930790425851744`,
+    //             { mode: "cors" }
+    //         );
+    //         const weatherForcast = await response2.json();
+    //         console.log(weatherForcast);
+    //     } catch (err) {
+    //         console.log(err);
+    //     }
+    // } catch (err) {
+    //     console.log(err);
+    // }
+};
+//153.0281, lat: -27.4679
 const kelvinToCelsius = (k) => {
     let c = Math.round(k - 273.15) + " c";
     return c;

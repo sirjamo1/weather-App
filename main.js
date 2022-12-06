@@ -1,4 +1,4 @@
-import data from "./assets/city.list.json" assert { type: "json" };
+import data from "./assets/cityId.list.json" assert { type: "json" };
 
 const cityData = data;
 const renderApp = () => {
@@ -7,9 +7,8 @@ const renderApp = () => {
     mainContainer.style.backgroundImage =
         "url('assets/images/backgrounds/midday.jpg')";
     mainContainer.appendChild(renderForm());
-    console.log(cityData);
 
-    console.log("done");
+console.log("done")
     return mainContainer;
 };
 const confirmCity = (city) => {

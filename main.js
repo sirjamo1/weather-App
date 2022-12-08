@@ -8,7 +8,7 @@ const renderApp = () => {
         "url('assets/images/backgrounds/midday.jpg')";
     mainContainer.appendChild(renderForm());
 
-console.log("done")
+    console.log("done");
     return mainContainer;
 };
 const confirmCity = (city) => {
@@ -24,7 +24,6 @@ const confirmCity = (city) => {
                 : splitString[i][0].toUpperCase() + splitString[i].slice(1);
         cityFormatted += lowerCase;
     }
-    console.log({ cityFormatted });
 
     for (let i = 0; i < cityData.length; i += 1) {
         if (cityData[i].name == cityFormatted) {
@@ -50,8 +49,9 @@ const renderForm = () => {
     searchButton.innerHTML = "Search";
     searchButton.addEventListener("click", (e) => {
         let id = confirmCity(locationInput.value);
-
-        getData(id);
+        getWeatherApi(id);
+        // getForecastData(id);
+        // getCurrentWeather(id)
         e.preventDefault();
     });
 
@@ -120,30 +120,37 @@ const compassLabels = [
     "N",
 ];
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const fiveDayForecast = (data, weekday) => {
+const renderForecast = (forecastData, weekday) => {
+    //Note: This is showing thurs as fri, fri as sat etc...
     const forecastContainer = document.createElement("div");
     forecastContainer.id = "forecast-container";
     let daysOfWeekIndex = daysOfWeek.indexOf(weekday);
-
-    for (let i = 1; i < 6; i += 1) {
+let forecastLength = Object.keys(forecastData.days).length
+    for (let i = 1; i < forecastLength; i += 1) {
         daysOfWeekIndex =
             daysOfWeekIndex === 6
                 ? (daysOfWeekIndex = 0)
                 : (daysOfWeekIndex += 1);
         const dayContainer = document.createElement("div");
-        dayContainer.className = 'day-container'
+        dayContainer.className = "day-container";
         const day = document.createElement("p");
         day.innerHTML = `${daysOfWeek[daysOfWeekIndex]}`;
         dayContainer.appendChild(day);
+        const icon = document.createElement("img");
+        icon.src = `http://openweathermap.org/img/wn/${forecastData.days[i].icon}@2x.png`;
+        icon.className = "forecast-icon";
+        dayContainer.appendChild(icon);
         const minTemp = document.createElement("p");
+        minTemp.style.color = changeHotColdText(forecastData.days[i].min)
         minTemp.innerHTML = `Min: ${kelvinToCelsius(
-            data.list[i].main.temp_min
-        )}`;
+            forecastData.days[i].min
+        )}&#176`;
         dayContainer.appendChild(minTemp);
         const maxTemp = document.createElement("p");
+        maxTemp.style.color = changeHotColdText(forecastData.days[i].max)
         maxTemp.innerHTML = `Max:${kelvinToCelsius(
-            data.list[i].main.temp_max
-        )}`;
+            forecastData.days[i].max
+        )}&#176`;
         dayContainer.appendChild(maxTemp);
 
         forecastContainer.appendChild(dayContainer);
@@ -151,22 +158,37 @@ const fiveDayForecast = (data, weekday) => {
 
     return forecastContainer;
 };
+const changeHotColdText = (temp) => {
+    if (temp >= 302) {
+        return "red";
+    } else if (temp <= 283) {
+        return "blue";
+    } else {
+        return "black";
+    }
+};
 const windDir = (deg) => {
     let index = Math.round(deg / 22.5);
     let compassReading = compassLabels[index];
     return compassReading;
 };
-const renderWeatherCard = (data) => {
-    const timezone = data.city.timezone / 60 / 60;
+const renderWeatherCard = (currentData, forecastData) => {
+    const timezone = currentData.timezone / 60 / 60;
     const localFullDateTime = getLocalDateTime(timezone);
     const weekday = localFullDateTime.toString().substring(0, 3);
     const localDateTime = localFullDateTime.toLocaleString();
-    const sunriseTime = getSunRiseSunSet(data.city.timezone, data.city.sunrise);
-    const sunsetTime = getSunRiseSunSet(data.city.timezone, data.city.sunset);
+    const sunriseTime = getSunRiseSunSet(
+        currentData.timezone,
+        currentData.sys.sunrise
+    );
+    const sunsetTime = getSunRiseSunSet(
+        currentData.timezone,
+        currentData.sys.sunset
+    );
     const mainContainer = document.getElementById("main-container");
     const weatherCard = document.createElement("div");
     // weatherCard.style.backgroundImage =
-    //     `url('assets/images/backgrounds/cardWeather/${data.weather[0].description}.jpg')`;
+    //     `url('assets/images/backgrounds/cardWeather/${currentData.weather[0].description}.jpg')`;
     changeBackground(
         localDateTime,
         sunriseTime,
@@ -177,14 +199,14 @@ const renderWeatherCard = (data) => {
     weatherCard.id = "weather-card";
     const location = document.createElement("h3");
 
-    location.innerHTML = `${data.city.name}, ${data.city.country}`;
+    location.innerHTML = `${currentData.name}, ${currentData.sys.country}`;
     weatherCard.appendChild(location);
     const locationDateTime = document.createElement("p");
     locationDateTime.innerHTML = localDateTime;
     weatherCard.appendChild(locationDateTime);
-    for (let i = 0; i < data.list[0].weather.length; i += 1) {
+    for (let i = 0; i < currentData.weather.length; i += 1) {
         const icon = document.createElement("img");
-        icon.src = `http://openweathermap.org/img/wn/${data.list[0].weather[i].icon}@2x.png`;
+        icon.src = `http://openweathermap.org/img/wn/${currentData.weather[i].icon}@2x.png`;
         icon.classList = "weather-icons";
         weatherCard.appendChild(icon);
     }
@@ -192,61 +214,95 @@ const renderWeatherCard = (data) => {
     //TEMP container
 
     const tempContainer = document.createElement("div");
-    //L
+    tempContainer.id = "temp-container";
+
+    //L Container
+
     const tempInnerContainerL = document.createElement("div");
     tempInnerContainerL.id = "temp-inner-container-l";
     tempContainer.appendChild(tempInnerContainerL);
-    tempContainer.id = "temp-container";
+    //description L
+    const descriptionL = document.createElement("div");
+    descriptionL.id = "description-l";
+    tempInnerContainerL.appendChild(descriptionL);
     const temp = document.createElement("p");
     temp.innerHTML = `Temp :`;
     temp.id = "temp";
-    tempInnerContainerL.appendChild(temp);
+    descriptionL.appendChild(temp);
     const minTemp = document.createElement("p");
-    minTemp.innerHTML = `Min-temp :`;
+    minTemp.innerHTML = `Min :`;
     minTemp.id = "min-temp";
-    tempInnerContainerL.appendChild(minTemp);
+    descriptionL.appendChild(minTemp);
     const maxTemp = document.createElement("p");
-    maxTemp.innerHTML = `Max-temp :`;
+    maxTemp.innerHTML = `Max :`;
     maxTemp.id = "max-temp";
-    tempInnerContainerL.appendChild(maxTemp);
-    const feelsLike = document.createElement("p");
-    feelsLike.innerHTML = `Feels like :`;
-    feelsLike.id = "feels-like";
-    tempInnerContainerL.appendChild(feelsLike);
-    const humidity = document.createElement("p");
-    humidity.innerHTML = "Humidity :";
-    tempInnerContainerL.appendChild(humidity);
-    const pressure = document.createElement("p");
-    pressure.innerHTML = "Pressure :";
-    tempInnerContainerL.appendChild(pressure);
-    //R
+    descriptionL.appendChild(maxTemp);
+
+    //value L
+    const valueL = document.createElement("div");
+    valueL.id = "value-l";
+    tempInnerContainerL.appendChild(valueL);
+    const tempValue = document.createElement("p");
+
+    tempValue.style.color = changeHotColdText(currentData.main.temp);
+    console.log(currentData.main.temp)
+    tempValue.innerHTML = `${kelvinToCelsius(currentData.main.temp)}&#176`;
+    valueL.appendChild(tempValue);
+    const minTempValue = document.createElement("p");
+    minTempValue.style.color = changeHotColdText(forecastData.days[0].min);
+    minTempValue.innerHTML = `${kelvinToCelsius(
+        forecastData.days[0].min
+    )}&#176`;
+
+    minTempValue.id = "min-temp-value";
+    valueL.appendChild(minTempValue);
+    const maxTempValue = document.createElement("p");
+    maxTempValue.style.color = changeHotColdText(forecastData.days[0].max);
+    maxTempValue.innerHTML = `${kelvinToCelsius(forecastData.days[0].max)}&#176`;
+    maxTempValue.id = "max-temp-value";
+    valueL.appendChild(maxTempValue);
+
+    //R container
     const tempInnerContainerR = document.createElement("div");
     tempInnerContainerR.id = "temp-inner-container-r";
     tempContainer.appendChild(tempInnerContainerR);
-    const tempValue = document.createElement("p");
-    tempValue.innerHTML = kelvinToCelsius(data.list[0].main.temp);
-    tempInnerContainerR.appendChild(tempValue);
-    const minTempValue = document.createElement("p");
-    minTempValue.innerHTML = kelvinToCelsius(data.list[0].main.temp_min);
-    minTempValue.id = "min-temp-value";
-    tempInnerContainerR.appendChild(minTempValue);
-    const maxTempValue = document.createElement("p");
-    maxTempValue.innerHTML = kelvinToCelsius(data.list[0].main.temp_max);
-    maxTempValue.id = "max-temp-value";
-    tempInnerContainerR.appendChild(maxTempValue);
+
+    // description R
+    const descriptionR = document.createElement("div");
+    descriptionR.id = "description-r";
+    tempInnerContainerR.append(descriptionR);
+    const feelsLike = document.createElement("p");
+    feelsLike.innerHTML = `Feels like :`;
+    feelsLike.id = "feels-like";
+    descriptionR.appendChild(feelsLike);
+    const humidity = document.createElement("p");
+    humidity.innerHTML = "Humidity :";
+    descriptionR.appendChild(humidity);
+    const pressure = document.createElement("p");
+    pressure.innerHTML = "Pressure :";
+    descriptionR.appendChild(pressure);
+    // value r
+    const valueR = document.createElement("div");
+    valueR.id = "value-r";
+    tempInnerContainerR.appendChild(valueR);
     const feelsLikeValue = document.createElement("p");
-    feelsLikeValue.innerHTML = kelvinToCelsius(data.list[0].main.feels_like);
+    feelsLikeValue.style.color = changeHotColdText(currentData.main.feels_like);
+    feelsLikeValue.innerHTML = `${kelvinToCelsius(
+        currentData.main.feels_like
+    )}&#176`;
     feelsLikeValue.id = "feels-like-value";
-    tempInnerContainerR.appendChild(feelsLikeValue);
+    valueR.appendChild(feelsLikeValue);
     const humidityValue = document.createElement("p");
-    humidityValue.innerHTML = data.list[0].main.humidity;
-    tempInnerContainerR.appendChild(humidityValue);
+    humidityValue.innerHTML = currentData.main.humidity;
+    valueR.appendChild(humidityValue);
     const pressureValue = document.createElement("p");
-    pressureValue.innerHTML = data.list[0].main.pressure;
-    tempInnerContainerR.appendChild(pressureValue);
+    pressureValue.innerHTML = currentData.main.pressure;
+    valueR.appendChild(pressureValue);
+
     weatherCard.appendChild(tempContainer);
+
     //5 day forecast
-    weatherCard.appendChild(fiveDayForecast(data, weekday));
+    weatherCard.appendChild(renderForecast(forecastData, weekday));
     //Sun Container
     const sunContainer = document.createElement("div");
     sunContainer.style.backgroundImage =
@@ -272,11 +328,11 @@ const renderWeatherCard = (data) => {
     wind.innerHTML = `Wind`;
     windInnerContainerL.appendChild(wind);
     const windSpeed = document.createElement("p");
-    windSpeed.innerHTML = `${data.list[0].wind.speed} m/s`;
+    windSpeed.innerHTML = `${currentData.wind.speed} m/s`;
     windInnerContainerL.appendChild(windSpeed);
     const windDirection = document.createElement("p");
     windDirection.id = "wind-direction";
-    windDirection.innerHTML = windDir(data.list[0].wind.deg);
+    windDirection.innerHTML = windDir(currentData.wind.deg);
     windInnerContainerL.appendChild(windDirection);
     //R
     const windInnerContainerR = document.createElement("div");
@@ -288,7 +344,7 @@ const renderWeatherCard = (data) => {
     const arrowRed = document.createElement("img");
     arrowRed.src = "assets/icons/redArrow.png";
     arrowRed.id = "arrow-red";
-    arrowRed.style.transform = `rotate(${data.list[0].wind.deg}deg)`;
+    arrowRed.style.transform = `rotate(${currentData.wind.deg}deg)`;
 
     windInnerContainerR.appendChild(compass);
     windInnerContainerR.appendChild(arrowRed);
@@ -304,58 +360,136 @@ const renderWeatherCard = (data) => {
         mainContainer.appendChild(weatherCard);
     }
 };
-const getData = async (id) => {
+const formatDate = (date) => {
+    let d = new Date(date),
+        month = "" + (d.getMonth() + 1),
+        day = "" + d.getDate(),
+        year = d.getFullYear();
+    if (month.length < 2) month = "0" + month;
+    if (day.length < 2) day = "0" + day;
+
+    return `${year}-${month}-${day}`;
+};
+const findMostCommon = (arr) => {
+    return arr
+        .sort(
+            (a, b) =>
+                arr.filter((v) => v === a).length -
+                arr.filter((v) => v === b).length
+        )
+        .pop();
+};
+const sortDays = (data) => {
+    let date = formatDate(new Date());
+    let logData = false;
+    let days = {};
+    let daysIndex = 0;
+    let day = { min: 999, max: -999, temp: 0, icon: [""], date };
+    let loopCount = 0;
+    for (let i = 0; i < data.list.length; i += 1) {
+        date = formatDate(date);
+        let iDate = formatDate(data.list[i].dt_txt);
+
+        if (iDate === date) {
+            logData = true;
+            (day.temp += data.list[i].main.temp),
+                (day.min =
+                    data.list[i].main.temp_min < day.min
+                        ? data.list[i].main.temp_min
+                        : day.min),
+                (day.max =
+                    data.list[i].main.temp_max > day.max
+                        ? data.list[i].main.temp_max
+                        : day.max),
+                (day.icon[loopCount] = data.list[i].weather[0].icon);
+                day.date = formatDate(data.list[i].dt_txt)
+
+            loopCount += 1;
+        } else if (logData === true) {
+            day.temp = day.temp / loopCount;
+            let mostCommonIcon = findMostCommon(day.icon);
+            days[daysIndex] = {
+                min: day.min,
+                max: day.max,
+                temp: day.temp,
+                icon: mostCommonIcon,
+                date: day.date,
+            };
+
+            //reset for next loop
+            daysIndex += 1;
+            day = { min: 999, max: -999, temp: 0, icon: [""] };
+            loopCount = 0;
+            let nextDate = new Date(date);
+            date = formatDate(nextDate.setDate(nextDate.getDate() + 1));
+        }
+    }
+    return days;
+};
+const sortWeatherData = (data) => {
+    console.log(data);
+    const sortedData = {
+        name: data.city.name,
+        country: data.city.country,
+        sunrise: data.city.sunrise,
+        sunset: data.city.sunset,
+        timezone: data.city.timezone,
+        days: sortDays(data),
+    };
+    console.log(sortedData);
+    // sortDays(data);
+    return sortedData;
+};
+const getWeatherApi = async (id) => {
     try {
-        const response = await fetch(
+        const responseForecast = await fetch(
             `http://api.openweathermap.org/data/2.5/forecast?id=${id}&appid=9f22446b3c7684227930790425851744`,
             { mode: "cors" }
         );
-        const weatherData = await response.json();
-        console.log(weatherData);
-        renderWeatherCard(weatherData);
+        const forecastData = await responseForecast.json();
+        console.log({forecastData})
+        let sortedForecastData = sortWeatherData(forecastData);
+        const responseCurrent = await fetch(
+            `http://api.openweathermap.org/data/2.5/weather?id=${id}&appid=9f22446b3c7684227930790425851744`,
+            { mode: "cors" }
+        );
+        const currentData = await responseCurrent.json();
+        console.log({ currentData });
+        console.log(sortedForecastData);
+        renderWeatherCard(currentData, sortedForecastData);
     } catch (err) {
         console.log(err);
-    }
+        // }
+        // try {
+        //     const responseCurrent = await fetch(
+        //         `http://api.openweathermap.org/data/2.5/weather?id=${id}&appid=9f22446b3c7684227930790425851744&units=metric`,
+        //         { mode: "cors" }
+        //     );
+        //     const currentData = await responseCurrent.json();
+        //     // console.log({ currentData });
+        //         renderWeatherCard(currentData);
 
-    // try {
-    //     const response1 = await fetch(
-    //         `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=9f22446b3c7684227930790425851744`,
-    //         { mode: "cors" }
-    //     );
-    //     const weatherData = await response1.json();
-    //     const lat = weatherData.coord.lat;
-    //     const lon = weatherData.coord.lon;
-    //     console.log(weatherData);
-    //     renderWeatherCard(weatherData);
-    //     try {
-    //         const response2 = await fetch(
-    //             `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=9f22446b3c7684227930790425851744`,
-    //             { mode: "cors" }
-    //         );
-    //         const weatherForcast = await response2.json();
-    //         console.log(weatherForcast);
-    //     } catch (err) {
-    //         console.log(err);
-    //     }
-    // } catch (err) {
-    //     console.log(err);
-    // }
+        // } catch (err) {
+        //     console.log(err);
+        // }
+    }
 };
-//153.0281, lat: -27.4679
+
+//}
 const kelvinToCelsius = (k) => {
-    let c = Math.round(k - 273.15) + " c";
+    let c = Math.round(k - 273.15);
     return c;
 };
 const kelvinToFahrenheit = (k) => {
-    let f = Math.round(1.8 * (k - 273) + 32) + " f";
+    let f = Math.round(1.8 * (k - 273) + 32);
     return f;
 };
 const celsiusTofahrenheit = (c) => {
-    let f = Math.round(c * 1.8 + 32) + " f";
+    let f = Math.round(c * 1.8 + 32);
     return f;
 };
 const fahrenheitToCelsius = (f) => {
-    let c = Math.round((f - 32) * 0.5556) + " c";
+    let c = Math.round((f - 32) * 0.5556);
     return c;
 };
 

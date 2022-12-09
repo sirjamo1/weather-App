@@ -1,6 +1,7 @@
 import data from "./assets/cityId.list.json" assert { type: "json" };
 
 const cityData = data;
+  let tempInCelsius = true;
 const renderApp = () => {
     const mainContainer = document.createElement("div");
     mainContainer.id = "main-container";
@@ -47,9 +48,12 @@ const renderForm = () => {
     const searchButton = document.createElement("button");
     searchButton.type = "search";
     searchButton.innerHTML = "Search";
+    console.log(tempInCelsius)
     searchButton.addEventListener("click", (e) => {
+        
         let id = confirmCity(locationInput.value);
         getWeatherApi(id);
+        console.log("helloooo")
         // getForecastData(id);
         // getCurrentWeather(id)
         e.preventDefault();
@@ -121,8 +125,10 @@ const compassLabels = [
 ];
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const renderForecast = (forecastData, weekday) => {
+
     //Note: This is showing thurs as fri, fri as sat etc...
     const forecastContainer = document.createElement("div");
+    
     forecastContainer.id = "forecast-container";
     let daysOfWeekIndex = daysOfWeek.indexOf(weekday);
 let forecastLength = Object.keys(forecastData.days).length
@@ -132,6 +138,7 @@ let forecastLength = Object.keys(forecastData.days).length
                 ? (daysOfWeekIndex = 0)
                 : (daysOfWeekIndex += 1);
         const dayContainer = document.createElement("div");
+
         dayContainer.className = "day-container";
         const day = document.createElement("p");
         day.innerHTML = `${daysOfWeek[daysOfWeekIndex]}`;
@@ -141,16 +148,18 @@ let forecastLength = Object.keys(forecastData.days).length
         icon.className = "forecast-icon";
         dayContainer.appendChild(icon);
         const minTemp = document.createElement("p");
-        minTemp.style.color = changeHotColdText(forecastData.days[i].min)
-        minTemp.innerHTML = `Min: ${kelvinToCelsius(
-            forecastData.days[i].min
-        )}&#176`;
+        minTemp.innerHTML = `Min: ${
+            tempInCelsius === true
+                ? kelvinToCelsius(forecastData.days[i].min)
+                : kelvinToFahrenheit(forecastData.days[i].min)
+        }&#176`;
         dayContainer.appendChild(minTemp);
         const maxTemp = document.createElement("p");
-        maxTemp.style.color = changeHotColdText(forecastData.days[i].max)
-        maxTemp.innerHTML = `Max:${kelvinToCelsius(
-            forecastData.days[i].max
-        )}&#176`;
+        maxTemp.innerHTML = `Max:${
+            tempInCelsius === true
+                ? kelvinToCelsius(forecastData.days[i].max)
+                : kelvinToFahrenheit(forecastData.days[i].max)
+        }&#176`;
         dayContainer.appendChild(maxTemp);
 
         forecastContainer.appendChild(dayContainer);
@@ -172,11 +181,22 @@ const windDir = (deg) => {
     let compassReading = compassLabels[index];
     return compassReading;
 };
+const changeTempMeasurement = (el, value) => {
+    console.log(tempInCelsius)
+        el.innerHTML = `${
+            tempInCelsius === true
+                ? kelvinToCelsius(value)
+                : kelvinToFahrenheit(value)
+        }&#176`;
+}
 const renderWeatherCard = (currentData, forecastData) => {
+    console.log(tempInCelsius);
     const timezone = currentData.timezone / 60 / 60;
     const localFullDateTime = getLocalDateTime(timezone);
     const weekday = localFullDateTime.toString().substring(0, 3);
     const localDateTime = localFullDateTime.toLocaleString();
+    //   let tempInCelsius = "celsius";
+    // NEED TO: rework button to stay on c or f when re-rendered also have tempInCelsius to stay the same
     const sunriseTime = getSunRiseSunSet(
         currentData.timezone,
         currentData.sys.sunrise
@@ -197,8 +217,39 @@ const renderWeatherCard = (currentData, forecastData) => {
         weatherCard
     );
     weatherCard.id = "weather-card";
-    const location = document.createElement("h3");
+            //toggle
+    const toggleContainer = document.createElement("div");
+    toggleContainer.id = "toggle-container";
+    weatherCard.appendChild(toggleContainer);
+    const toggle = document.createElement("div");
+    toggle.classList = "toggle";
+    toggleContainer.onclick = () => {
+        tempInCelsius = !tempInCelsius;
+        console.log(tempInCelsius);
+        changeTempMeasurement(tempValue, currentData.main.temp);
+        changeTempMeasurement(maxTempValue, forecastData.days[0].max);
+        changeTempMeasurement(minTempValue, forecastData.days[0].min);
+        changeTempMeasurement(feelsLikeValue, currentData.main.feels_like);
+        weatherCard.replaceChild(
+            renderForecast(forecastData, weekday),
+            document.getElementById("forecast-container")
+        );
 
+        toggle.style.transform =
+            tempInCelsius === true ? "translateX(0px)" : "translateX(-21px)";
+    };
+    toggleContainer.appendChild(toggle);
+    const fahrenheit = document.createElement("span");
+    fahrenheit.id = "fahrenheit";
+    fahrenheit.innerHTML = "f&#176";
+    toggleContainer.appendChild(fahrenheit);
+    const celsius = document.createElement("span");
+    celsius.id = "celsius";
+    celsius.innerHTML = "c&#176";
+    toggleContainer.appendChild(celsius);
+
+    //city and icon
+    const location = document.createElement("h3");
     location.innerHTML = `${currentData.name}, ${currentData.sys.country}`;
     weatherCard.appendChild(location);
     const locationDateTime = document.createElement("p");
@@ -243,22 +294,27 @@ const renderWeatherCard = (currentData, forecastData) => {
     valueL.id = "value-l";
     tempInnerContainerL.appendChild(valueL);
     const tempValue = document.createElement("p");
-
-    tempValue.style.color = changeHotColdText(currentData.main.temp);
-    console.log(currentData.main.temp)
-    tempValue.innerHTML = `${kelvinToCelsius(currentData.main.temp)}&#176`;
+    tempValue.innerHTML = `${
+        tempInCelsius === true
+            ? kelvinToCelsius(currentData.main.temp)
+            : kelvinToFahrenheit(currentData.main.temp)
+    }&#176`;
     valueL.appendChild(tempValue);
     const minTempValue = document.createElement("p");
-    minTempValue.style.color = changeHotColdText(forecastData.days[0].min);
-    minTempValue.innerHTML = `${kelvinToCelsius(
-        forecastData.days[0].min
-    )}&#176`;
+    minTempValue.innerHTML = `${
+        tempInCelsius === true
+            ? kelvinToCelsius(forecastData.days[0].min)
+            : kelvinToFahrenheit(forecastData.days[0].min)
+    }&#176`;
 
     minTempValue.id = "min-temp-value";
     valueL.appendChild(minTempValue);
     const maxTempValue = document.createElement("p");
-    maxTempValue.style.color = changeHotColdText(forecastData.days[0].max);
-    maxTempValue.innerHTML = `${kelvinToCelsius(forecastData.days[0].max)}&#176`;
+    maxTempValue.innerHTML = `${
+        tempInCelsius === true
+            ? kelvinToCelsius(forecastData.days[0].max)
+            : kelvinToFahrenheit(forecastData.days[0].max)
+    }&#176`;
     maxTempValue.id = "max-temp-value";
     valueL.appendChild(maxTempValue);
 
@@ -286,10 +342,11 @@ const renderWeatherCard = (currentData, forecastData) => {
     valueR.id = "value-r";
     tempInnerContainerR.appendChild(valueR);
     const feelsLikeValue = document.createElement("p");
-    feelsLikeValue.style.color = changeHotColdText(currentData.main.feels_like);
-    feelsLikeValue.innerHTML = `${kelvinToCelsius(
-        currentData.main.feels_like
-    )}&#176`;
+    feelsLikeValue.innerHTML = `${
+        tempInCelsius === true
+            ? kelvinToCelsius(currentData.main.feels_like)
+            : kelvinToFahrenheit(currentData.main.feels_like)
+    }&#176`;
     feelsLikeValue.id = "feels-like-value";
     valueR.appendChild(feelsLikeValue);
     const humidityValue = document.createElement("p");

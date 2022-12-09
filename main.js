@@ -501,14 +501,14 @@ const getWeatherApi = async (id) => {
     try {
         const responseForecast = await fetch(
             `http://api.openweathermap.org/data/2.5/forecast?id=${id}&appid=9f22446b3c7684227930790425851744`,
-            { mode: "cors" }
+            // { mode: "cors" }
         );
         const forecastData = await responseForecast.json();
         console.log({forecastData})
         let sortedForecastData = sortWeatherData(forecastData);
         const responseCurrent = await fetch(
             `http://api.openweathermap.org/data/2.5/weather?id=${id}&appid=9f22446b3c7684227930790425851744`,
-            { mode: "cors" }
+            // { mode: "cors" }
         );
         const currentData = await responseCurrent.json();
         console.log({ currentData });

@@ -44,29 +44,62 @@ body {
     height: 95%;
     margin-bottom: 20px;
     display: grid;
-    background-repeat: no-repeat, repeat;
-    background-size: cover;
     background-color: rgba(255, 255, 255, 0.8);
     position: relative;
     text-align: center;
-       box-shadow: 0px 0px 2px 2px rgba(255,255,255,0.75);
--webkit-box-shadow: 0px 0px 2px 2px rgba(255,255,255,0.75);
--moz-box-shadow: 0px 0px 2px 2px rgba(255,255,255,0.75);
+    box-shadow: 0px 0px 2px 2px rgba(255, 255, 255, 0.75);
+    -webkit-box-shadow: 0px 0px 2px 2px rgba(255, 255, 255, 0.75);
+    -moz-box-shadow: 0px 0px 2px 2px rgba(255, 255, 255, 0.75);
 }
 
 #weather-card h3 {
     padding-top: 10px;
     font-size: 1.6rem;
 }
+/* toggle */
+#toggle-container {
+    width: 50px;
+    height: 30px;
+    background-color: rgb(78, 131, 185);
+    border-radius: 26px;
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    cursor: pointer;
+    box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.75) inset;
+    -webkit-box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.75) inset;
+    -moz-box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.75) inset;
+}
+.toggle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: white;
+    position: relative;
+    top: 3px;
+    left: 23px;
+    transition: 0.4s;
+}
+#celsius {
+    position: relative;
+    font-size: 0.8rem;
+    left: 8px;
+    top: -19px;
+}
+#fahrenheit {
+    position: relative;
+    font-size: 0.8rem;
+    left: -4px;
+    top: -19px;
+}
 
 .weather-icons {
     margin: auto;
     border-radius: 50%;
-    background-color:  rgba(78, 131, 185, 0.585);
-       box-shadow: 0px 0px 10px 5px rgba(255,255,255,0.75);
--webkit-box-shadow: 0px 0px 10px 5px rgba(255,255,255,0.75);
--moz-box-shadow: 0px 0px 10px 5px rgba(255,255,255,0.75);
- 
+    background-color: rgba(78, 131, 185, 0.585);
+    box-shadow: 0px 0px 10px 5px rgba(255, 255, 255, 0.75);
+    -webkit-box-shadow: 0px 0px 10px 5px rgba(255, 255, 255, 0.75);
+    -moz-box-shadow: 0px 0px 10px 5px rgba(255, 255, 255, 0.75);
 }
 #temp-container {
     display: flex;
@@ -106,13 +139,13 @@ body {
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
-    background-color:  rgba(78, 131, 185, 0.585);
+    background-color: rgba(78, 131, 185, 0.585);
     border-radius: 6px;
     margin: 10px;
-       box-shadow: 0px 0px 10px 5px rgba(255,255,255,0.75);
--webkit-box-shadow: 0px 0px 10px 5px rgba(255,255,255,0.75);
--moz-box-shadow: 0px 0px 10px 5px rgba(255,255,255,0.75);
-height: 120px;
+    box-shadow: 0px 0px 10px 5px rgba(255, 255, 255, 0.75);
+    -webkit-box-shadow: 0px 0px 10px 5px rgba(255, 255, 255, 0.75);
+    -moz-box-shadow: 0px 0px 10px 5px rgba(255, 255, 255, 0.75);
+    height: 120px;
 }
 #wind-inner-container-l {
     padding-top: 35px;
@@ -137,54 +170,18 @@ height: 120px;
     display: flex;
     justify-content: space-evenly;
 }
-.day-container {
+.day-cards {
     background-color: rgba(78, 131, 185, 0.585);
     border-radius: 6px;
     font-size: 0.7rem;
     min-width: 20%;
-    box-shadow: 0px 0px 10px 5px rgba(255,255,255,0.75);
--webkit-box-shadow: 0px 0px 10px 5px rgba(255,255,255,0.75);
--moz-box-shadow: 0px 0px 10px 5px rgba(255,255,255,0.75);
-
+    box-shadow: 0px 0px 10px 5px rgba(255, 255, 255, 0.75);
+    -webkit-box-shadow: 0px 0px 10px 5px rgba(255, 255, 255, 0.75);
+    -moz-box-shadow: 0px 0px 10px 5px rgba(255, 255, 255, 0.75);
+}
+.day {
+    margin-top: 4px;
 }
 .forecast-icon {
     width: 30px;
-}
-
-/* toggle */
-#toggle-container {
-    width: 50px;
-    height: 30px;
-    background-color: rgb(78,131,185);
-    border-radius: 26px;
-    position:absolute;
-    top: 6px;
-    right: 6px;
-    cursor: pointer;
-    box-shadow: 0px 0px 5px 0px rgba(255,255,255,0.75) inset;
--webkit-box-shadow: 0px 0px 5px 0px rgba(255,255,255,0.75) inset;
--moz-box-shadow: 0px 0px 5px 0px rgba(255,255,255,0.75) inset;
-}
-.toggle {
-width: 24px;
-height: 24px;
-border-radius: 50%;
-background-color: white;
-position: relative;
-top: 3px;
-left: 23px;
-transition: 0.4s;
-}
-#celsius {
-    position: relative;
-    font-size: 0.8rem;
-    left: 8px;
-    top: -19px;
-}
-#fahrenheit {
-    position: relative;
-    font-size: 0.8rem;
-    left: -4px;
-    top: -19px;
-   
 }

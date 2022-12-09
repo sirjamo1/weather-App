@@ -29,7 +29,8 @@ const confirmCity = (city) => {
             return cityId;
         }
     }
-    console.log(`${city} not found`);
+
+    alert(`${city} not found`);
 };
 const renderForm = () => {
     const formContainer = document.createElement("form");

@@ -155,7 +155,7 @@ let forecastLength = Object.keys(forecastData.days).length
         }&#176`;
         dayContainer.appendChild(minTemp);
         const maxTemp = document.createElement("p");
-        maxTemp.innerHTML = `Max:${
+        maxTemp.innerHTML = `Max: ${
             tempInCelsius === true
                 ? kelvinToCelsius(forecastData.days[i].max)
                 : kelvinToFahrenheit(forecastData.days[i].max)
@@ -167,15 +167,15 @@ let forecastLength = Object.keys(forecastData.days).length
 
     return forecastContainer;
 };
-const changeHotColdText = (temp) => {
-    if (temp >= 302) {
-        return "red";
-    } else if (temp <= 283) {
-        return "blue";
-    } else {
-        return "black";
-    }
-};
+// const changeHotColdText = (temp) => {
+//     if (temp >= 302) {
+//         return "red";
+//     } else if (temp <= 283) {
+//         return "blue";
+//     } else {
+//         return "black";
+//     }
+// };
 const windDir = (deg) => {
     let index = Math.round(deg / 22.5);
     let compassReading = compassLabels[index];
